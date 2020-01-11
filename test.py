@@ -21,6 +21,13 @@ case3_f_x = lambda x: x
 case3_f_u_v = lambda x,u,v: derivative(u, x, dx=1e-6, args=())*derivative(v, x, dx=1e-6, args=())
 case3_f_v = lambda v: -v(a)
 
+case4_f_x = lambda x: 1
+case4_f_u_v = lambda x,u,v: -derivative(u, x, dx=1e-6, args=())*derivative(v, x, dx=1e-6, args=()) + u(x)*v(x)
+case4_f_v = lambda v: +v(b)
+case4_c_u_v = lambda u,v: u(b)*v(b)
+case4_u_shift = lambda x: 2*e0(x)
+
+
 print("TESTS")
 
 class TestFemMethods(unittest.TestCase):
@@ -146,10 +153,57 @@ class TestFemMethods(unittest.TestCase):
     self.assertIs(result, True)
 
   def test_case3_fem(self):
-    result = fem(f_x=case3_f_x, f_u_v=case3_f_u_v, f_v=case3_f_v, debug=True, robin_left=True)
+    result = fem(f_x=case3_f_x, f_u_v=case3_f_u_v, f_v=case3_f_v, robin_left=True)
     self.assertIs(isclose(result[0], -5/6, abs_tol=EPSILON), True)
     self.assertIs(isclose(result[1], -41/81, abs_tol=EPSILON), True)
     self.assertIs(isclose(result[2], -35/162, abs_tol=EPSILON), True)
+
+  def test_case4_B11(self):
+    val = B(case4_f_u_v, u=e1, v=e1, c_u_v=case4_c_u_v)
+    result = isclose(val, -6 + 2/9, abs_tol=EPSILON)
+    self.assertIs(result, True)
+
+  def test_case4_B21(self):
+    result = isclose(B(case4_f_u_v, u=e2, v=e1, c_u_v=case4_c_u_v), 3 + 1/18, abs_tol=EPSILON)
+    self.assertIs(result, True)
+
+  def test_case4_B31(self):
+    result = isclose(B(case4_f_u_v, u=e3, v=e1, c_u_v=case4_c_u_v), 0, abs_tol=EPSILON)
+    self.assertIs(result, True)
+
+  def test_case4_B22(self):
+    result = isclose(B(case4_f_u_v, u=e2, v=e2, c_u_v=case4_c_u_v), -6 + 2/9, abs_tol=EPSILON)
+    self.assertIs(result, True)
+
+  def test_case4_B32(self):
+    result = isclose(B(case4_f_u_v, u=e3, v=e2, c_u_v=case4_c_u_v), 3 + 1/18, abs_tol=EPSILON)
+    self.assertIs(result, True)
+
+  def test_case4_B33(self):
+    val = B(case4_f_u_v, u=e3, v=e3, c_u_v=case4_c_u_v)
+    result = isclose(val, -2 + 1/9, abs_tol=EPSILON)
+    self.assertIs(result, True)
+
+  def test_case4_l1(self):
+    val = l(case4_f_x, e1, f_v=case4_f_v) - B(case4_f_u_v, u=case4_u_shift, v=e1)
+    result = isclose(val, 1/3 - 6 - 1/9, abs_tol=EPSILON)
+    self.assertIs(result, True)
+
+  def test_case4_l2(self):
+    val = l(case4_f_x, e2, f_v=case4_f_v) - B(case4_f_u_v, u=case4_u_shift, v=e2)
+    result = isclose(val, 1/3, abs_tol=EPSILON)
+    self.assertIs(result, True)
+
+  def test_case4_l3(self):
+    val = l(case4_f_x, e3, f_v=case4_f_v) - B(case4_f_u_v, u=case4_u_shift, v=e3)
+    result = isclose(val, 1/6 + 1, abs_tol=EPSILON)
+    self.assertIs(result, True)
+
+  def test_case4_fem(self):
+    result = fem(f_x=case4_f_x, f_u_v=case4_f_u_v, f_v=case4_f_v, c_u_v=case4_c_u_v, u_shift=case4_u_shift, robin_right=True)
+    self.assertIs(isclose(result[0], 21601/49706, abs_tol=EPSILON), True)
+    self.assertIs(isclose(result[1], -26572/24853, abs_tol=EPSILON), True)
+    self.assertIs(isclose(result[2], -116669/49706, abs_tol=EPSILON), True)
 
 
 if __name__ == '__main__':

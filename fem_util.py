@@ -45,7 +45,7 @@ def fem(f_x, f_u_v, u_shift=lambda x: 0, f_v=lambda v: 0, c_u_v=lambda u,v: 0, a
   vector = np.array( [ l(f_x=f_x, v=e_base[i], f_v=f_v, a=a, b=b) - B(f_u_v, u_shift, e_base[i])  for i in range(d) ] )
 
   if debug:
-    print(matrix, "\n")
-    print(vector, "\n")
+    print("matrix: \n", matrix, "\n")
+    print("vector: \n",vector, "\n")
 
   return la.solve(matrix, vector)
