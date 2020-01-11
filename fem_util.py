@@ -19,14 +19,14 @@ def e_n(x, k, a=0, b=1, N=3):
   else:
     return 0
 
-def B(f_u_v, u, v, a=0, b=1, N=3):
-  return quad(f_u_v, a, b, args=(u,v))[0]
+def B(f_u_v, u, v, c_u_v=lambda u,v: 0, a=0, b=1, N=3):
+  return quad(f_u_v, a, b, args=(u,v))[0] + c_u_v(u,v)
 
-def l(f_x, v, a=0, b=1):
+def l(f_x, v, f_v, a=0, b=1):
   f_x_v = lambda x: f_x(x)*v(x)
-  return quad(f_x_v, a, b, args=())[0]
+  return quad(f_x_v, a, b, args=())[0] + f_v(v)
 
-def fem(f_x, f_u_v, u_shift=lambda x: 0, f_v_left=0, a=0, b=1, N=3, robin_left=False, robin_right=False, debug=False):
+def fem(f_x, f_u_v, u_shift=lambda x: 0, f_v=lambda v: 0, c_u_v=lambda u,v: 0, a=0, b=1, N=3, robin_left=False, robin_right=False, debug=False):
   d = N - 1 # matrix dimention
   if robin_left:
     d += 1
@@ -40,16 +40,9 @@ def fem(f_x, f_u_v, u_shift=lambda x: 0, f_v_left=0, a=0, b=1, N=3, robin_left=F
   # must use another lambda because single lamda refer to the i via the reference
   e_base = [(lambda y: (lambda x: e_n(x, y+e_base_index_shift)))(i) for i in range(d)]
 
-  matrix = np.array( [ [B(f_u_v, e_base[k], e_base[n]) for k in range(d) ] for n in range(d) ] )
-  # matrix = np.zeros((d,d))
-  # for n in range(d):
-  #   for k in range (d):
-  #     matrix[n][k] = B(f_u_v, e_base[k], e_base[n])
+  matrix = np.array( [ [B(f_u_v, u=e_base[k], v=e_base[n], c_u_v=c_u_v) for k in range(d) ] for n in range(d) ] )
 
-  vector = np.array( [ l(f_x, e_base[i], a=a, b=b) - B(f_u_v, u_shift, e_base[i]) + f_v_left*e_base[i](a) for i in range(d) ] )
-  # vector = np.zeros((d,1))
-  # for i in range(d):
-  #   vector[i] = l(f_x, e_base[i], a=a, b=b) - B(f_u_v, u_shift, e_base[i])
+  vector = np.array( [ l(f_x=f_x, v=e_base[i], f_v=f_v, a=a, b=b) - B(f_u_v, u_shift, e_base[i])  for i in range(d) ] )
 
   if debug:
     print(matrix, "\n")
