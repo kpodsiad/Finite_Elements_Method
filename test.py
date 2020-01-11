@@ -1,5 +1,5 @@
 import unittest
-from mes import integrate_fun, integrate_fun_prime, B, l
+from mes import integrate_fun, integrate_fun_prime, B, l, fem
 from math import isclose
 
 EPSILON = 1E-4
@@ -52,6 +52,12 @@ class TestStringMethods(unittest.TestCase):
     result = 1/3
     I_result = l(2)
     self.assertIs(isclose(result, I_result, abs_tol=EPSILON), True)
+
+  def test_fem(self):
+    result = fem()
+    self.assertIs(isclose(result[0], -6/59, abs_tol=EPSILON), True)
+    self.assertIs(isclose(result[1], -6/59, abs_tol=EPSILON), True)
+
 
 if __name__ == '__main__':
     unittest.main()
